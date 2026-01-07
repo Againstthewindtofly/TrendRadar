@@ -59,6 +59,19 @@ def split_content_into_batches(
     Returns:
         分批后的消息内容列表
     """
+    # Server 酱使用与钉钉相同的 Markdown 格式处理逻辑
+    # 在后续处理中，serverchan 将被当作 dingtalk 处理
+    format_mapping = {
+        "serverchan": "dingtalk"
+    }
+
+    # 保存原始格式类型（用于日志和特定处理）
+    original_format = format_type
+
+    # 映射格式类型
+    if format_type in format_mapping:
+        format_type = format_mapping[format_type]
+
     # 合并批次大小配置
     sizes = {**DEFAULT_BATCH_SIZES, **(batch_sizes or {})}
 

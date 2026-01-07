@@ -1077,3 +1077,158 @@ def send_to_slack(
 
     print(f"{log_prefix}所有 {len(batches)} 批次发送完成 [{report_type}]")
     return True
+
+
+
+def send_to_serverchan(
+    uid: str,
+    sendkey: str,
+    report_data: Dict,
+    report_type: str,
+    update_info: Optional[Dict] = None,
+    proxy_url: Optional[str] = None,
+    mode: str = "daily",
+    account_label: str = "",
+    *,
+    batch_size: int = 4000,
+    batch_interval: float = 1.0,
+    split_content_func: Callable = None,
+    get_time_func: Callable = None,
+    rss_items: Optional[list] = None,
+    rss_new_items: Optional[list] = None,
+) -> bool:
+    """
+    发送到 Server酱³（支持分批发送，使用 Markdown 格式，支持热榜+RSS合并）
+
+    使用 Server酱³ 官方 API: https://<uid>.push.ft07.com/send/<sendkey>.send
+    文档: https://doc.sc3.ft07.com/zh/serverchan3/server/api
+
+    Args:
+        uid: Server酱 UID
+        sendkey: Server酱 SendKey
+        report_data: 报告数据
+        report_type: 报告类型
+        update_info: 更新信息（可选）
+        proxy_url: 代理 URL（可选）
+        mode: 报告模式 (daily/current)
+        account_label: 账号标签（多账号时显示）
+        batch_size: 批次大小（字节）
+        batch_interval: 批次发送间隔（秒）
+        split_content_func: 内容分批函数
+        get_time_func: 获取当前时间的函数（可选）
+        rss_items: RSS 统计条目列表（可选，用于合并推送）
+        rss_new_items: RSS 新增条目列表（可选，用于新增区块）
+
+    Returns:
+        bool: 发送是否成功
+    """
+    headers = {"Content-Type": "application/json;charset=utf-8"}
+    proxies = None
+    if proxy_url:
+        proxies = {"http": proxy_url, "https": proxy_url}
+
+    # 日志前缀
+    log_prefix = f"Server酱{account_label}" if account_label else "Server酱"
+
+    # 构建 Server酱³ API 端点
+    # 格式: https://<uid>.push.ft07.com/send/<sendkey>.send
+    api_endpoint = f"https://{uid}.push.ft07.com/send/{sendkey}.send"
+
+    # 获取分批内容，预留批次头部空间
+    header_reserve = get_max_batch_header_size("serverchan")
+    batches = split_content_func(
+        report_data, "serverchan", update_info, max_bytes=batch_size - header_reserve, mode=mode,
+        rss_items=rss_items,
+        rss_new_items=rss_new_items,
+    )
+
+    # 统一添加批次头部（已预留空间，不会超限）
+    batches = add_batch_headers(batches, "serverchan", batch_size)
+
+    total_batches = len(batches)
+    print(f"{log_prefix}消息分为 {total_batches} 批次发送 [{report_type}]")
+
+    # 逐批发送
+    success_count = 0
+    for i, batch_content in enumerate(batches, 1):
+        content_size = len(batch_content.encode("utf-8"))
+        print(
+            f"发送{log_prefix}第 {i}/{total_batches} 批次，大小：{content_size} 字节 [{report_type}]"
+        )
+
+        # 构建 payload (使用 Server酱³ API 规范)
+        # title: 消息标题（必需）
+        # desp: 消息内容（可选，支持 Markdown）
+        # tags: 标签（可选，用竖线分隔多个标签）
+        payload = {
+            "title": f"{report_type} - 批次 {i}/{total_batches}" if total_batches > 1 else report_type,
+            "desp": batch_content,
+            "tags": "TrendRadar"  # 添加 TrendRadar 标签
+        }
+
+        try:
+            # 使用 POST + JSON 方式发送（Server酱³ 官方推荐）
+            response = requests.post(
+                api_endpoint,
+                json=payload,
+                headers=headers,
+                proxies=proxies,
+                timeout=30,
+            )
+
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    # Server酱³ 成功时返回 {"code": 0, ...} 或 {"errno": 0, ...}
+                    if result.get("code") == 0 or result.get("errno") == 0:
+                        print(f"{log_prefix}第 {i}/{total_batches} 批次发送成功 [{report_type}]")
+                        success_count += 1
+                        # 批次间间隔
+                        if i < total_batches:
+                            time.sleep(batch_interval)
+                    else:
+                        error_msg = result.get("message") or result.get("errmsg") or result.get("info") or "未知错误"
+                        print(
+                            f"{log_prefix}第 {i}/{total_batches} 批次发送失败 [{report_type}]，错误：{error_msg}"
+                        )
+                except Exception as e:
+                    # 如果响应不是 JSON，尝试检查文本内容
+                    if "success" in response.text.lower() or "ok" in response.text.lower():
+                        print(f"{log_prefix}第 {i}/{total_batches} 批次发送成功 [{report_type}]")
+                        success_count += 1
+                        if i < total_batches:
+                            time.sleep(batch_interval)
+                    else:
+                        print(
+                            f"{log_prefix}第 {i}/{total_batches} 批次响应解析失败 [{report_type}]：{e}"
+                        )
+                        print(f"响应内容：{response.text[:200]}")
+            else:
+                print(
+                    f"{log_prefix}第 {i}/{total_batches} 批次发送失败 [{report_type}]，状态码：{response.status_code}"
+                )
+                try:
+                    print(f"错误详情：{response.text[:200]}")
+                except:
+                    pass
+
+        except requests.exceptions.ConnectTimeout:
+            print(f"{log_prefix}第 {i}/{total_batches} 批次连接超时 [{report_type}]")
+        except requests.exceptions.ReadTimeout:
+            print(f"{log_prefix}第 {i}/{total_batches} 批次读取超时 [{report_type}]")
+        except requests.exceptions.ConnectionError as e:
+            print(f"{log_prefix}第 {i}/{total_batches} 批次连接错误 [{report_type}]：{e}")
+        except Exception as e:
+            print(f"{log_prefix}第 {i}/{total_batches} 批次发送异常 [{report_type}]：{e}")
+
+    # 判断整体发送是否成功
+    if success_count == total_batches:
+        print(f"{log_prefix}所有 {total_batches} 批次发送完成 [{report_type}]")
+        return True
+    elif success_count > 0:
+        print(f"{log_prefix}部分发送成功：{success_count}/{total_batches} 批次 [{report_type}]")
+        return True  # 部分成功也视为成功
+    else:
+        print(f"{log_prefix}发送完全失败 [{report_type}]")
+        return False
+

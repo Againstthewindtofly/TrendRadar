@@ -42,6 +42,9 @@ services:
       - NTFY_TOKEN=${NTFY_TOKEN:-}
       # Bark配置
       - BARK_URL=${BARK_URL:-}
+      # Server酱配置
+      - SERVERCHAN_UID=${SERVERCHAN_UID:-}
+      - SERVERCHAN_SENDKEY=${SERVERCHAN_SENDKEY:-}
       # Slack配置
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
       # 远程存储配置（S3 兼容协议）
@@ -71,3 +74,21 @@ services:
 
     environment:
       - TZ=Asia/Shanghai
+
+  trendradar-webui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.webui
+    container_name: trendradar-webui
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:${WEBUI_PORT:-5000}:5000"
+
+    volumes:
+      - ../config:/app/config
+      - ../output:/app/output:ro
+
+    environment:
+      - TZ=Asia/Shanghai
+      - WEBUI_PORT=${WEBUI_PORT:-5000}

@@ -1,0 +1,16 @@
+trendradar/__pycache__
+trendradar/core/__pycache__
+trendradar/crawler/__pycache__
+trendradar/crawler/rss/__pycache__
+trendradar/notification/__pycache__
+*/*/__pycache__
+output
+uv.lock
+WEBUI_GUIDE.md
+.claude
+config/config.yaml
+docker/.env
+docker/trendradar-mcp.tar
+docker/trendradar-webui.tar
+docker/trendradar.tar
+webui/SUMMARY.md

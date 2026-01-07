@@ -209,6 +209,7 @@ class NewsAnalyzer:
                 (cfg["NTFY_SERVER_URL"] and cfg["NTFY_TOPIC"]),
                 cfg["BARK_URL"],
                 cfg["SLACK_WEBHOOK_URL"],
+                (cfg["SERVERCHAN_UID"] and cfg["SERVERCHAN_SENDKEY"]),
             ]
         )
 

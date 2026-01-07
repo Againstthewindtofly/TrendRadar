@@ -97,6 +97,7 @@ def _load_notification_config(config_data: Dict) -> Dict:
         "FEISHU_BATCH_SIZE": batch_size.get("feishu", 29000),
         "BARK_BATCH_SIZE": batch_size.get("bark", 3600),
         "SLACK_BATCH_SIZE": batch_size.get("slack", 4000),
+        "SERVERCHAN_BATCH_SIZE": batch_size.get("serverchan", 4000),
         "BATCH_SEND_INTERVAL": advanced.get("batch_send_interval", 1.0),
         "FEISHU_MESSAGE_SEPARATOR": advanced.get("feishu_message_separator", "---"),
         "MAX_ACCOUNTS_PER_CHANNEL": _get_env_int("MAX_ACCOUNTS_PER_CHANNEL") or advanced.get("max_accounts_per_channel", 3),
@@ -226,6 +227,7 @@ def _load_webhook_config(config_data: Dict) -> Dict:
     ntfy = channels.get("ntfy", {})
     bark = channels.get("bark", {})
     slack = channels.get("slack", {})
+    serverchan = channels.get("serverchan", {})
 
     return {
         # 飞书
@@ -252,6 +254,9 @@ def _load_webhook_config(config_data: Dict) -> Dict:
         "BARK_URL": _get_env_str("BARK_URL") or bark.get("url", ""),
         # Slack
         "SLACK_WEBHOOK_URL": _get_env_str("SLACK_WEBHOOK_URL") or slack.get("webhook_url", ""),
+        # Server酱
+        "SERVERCHAN_UID": _get_env_str("SERVERCHAN_UID") or serverchan.get("uid", ""),
+        "SERVERCHAN_SENDKEY": _get_env_str("SERVERCHAN_SENDKEY") or serverchan.get("sendkey", ""),
     }
 
 
@@ -323,6 +328,19 @@ def _print_notification_sources(config: Dict) -> None:
         count = min(len(accounts), max_accounts)
         slack_source = "环境变量" if os.environ.get("SLACK_WEBHOOK_URL") else "配置文件"
         notification_sources.append(f"Slack({slack_source}, {count}个账号)")
+
+    if config["SERVERCHAN_UID"] and config["SERVERCHAN_SENDKEY"]:
+        uids = parse_multi_account_config(config["SERVERCHAN_UID"])
+        sendkeys = parse_multi_account_config(config["SERVERCHAN_SENDKEY"])
+        valid, count = validate_paired_configs(
+            {"uid": uids, "sendkey": sendkeys},
+            "Server酱",
+            required_keys=["uid", "sendkey"]
+        )
+        if valid and count > 0:
+            count = min(count, max_accounts)
+            uid_source = "环境变量" if os.environ.get("SERVERCHAN_UID") else "配置文件"
+            notification_sources.append(f"Server酱({uid_source}, {count}个账号)")
 
     if notification_sources:
         print(f"通知渠道配置来源: {', '.join(notification_sources)}")

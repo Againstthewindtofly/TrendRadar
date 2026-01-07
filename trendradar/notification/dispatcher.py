@@ -25,6 +25,7 @@ from .senders import (
     send_to_email,
     send_to_feishu,
     send_to_ntfy,
+    send_to_serverchan,
     send_to_slack,
     send_to_telegram,
     send_to_wework,
@@ -131,6 +132,12 @@ class NotificationDispatcher:
         # Slack
         if self.config.get("SLACK_WEBHOOK_URL"):
             results["slack"] = self._send_slack(
+                report_data, report_type, update_info, proxy_url, mode, rss_items, rss_new_items
+            )
+
+        # Server酱（需要配对验证）
+        if self.config.get("SERVERCHAN_UID") and self.config.get("SERVERCHAN_SENDKEY"):
+            results["serverchan"] = self._send_serverchan(
                 report_data, report_type, update_info, proxy_url, mode, rss_items, rss_new_items
             )
 
@@ -439,6 +446,62 @@ class NotificationDispatcher:
             ),
         )
 
+    def _send_serverchan(
+        self,
+        report_data: Dict,
+        report_type: str,
+        update_info: Optional[Dict],
+        proxy_url: Optional[str],
+        mode: str,
+        rss_items: Optional[List[Dict]] = None,
+        rss_new_items: Optional[List[Dict]] = None,
+    ) -> bool:
+        """发送到 Server酱³（多账号，需验证 uid 和 sendkey 配对，支持热榜+RSS合并）"""
+        serverchan_uids = parse_multi_account_config(self.config["SERVERCHAN_UID"])
+        serverchan_sendkeys = parse_multi_account_config(self.config["SERVERCHAN_SENDKEY"])
+
+        if not serverchan_uids or not serverchan_sendkeys:
+            return False
+
+        # 验证配对
+        valid, count = validate_paired_configs(
+            {"uid": serverchan_uids, "sendkey": serverchan_sendkeys},
+            "Server酱",
+            required_keys=["uid", "sendkey"],
+        )
+        if not valid or count == 0:
+            return False
+
+        # 限制账号数量
+        serverchan_uids = limit_accounts(serverchan_uids, self.max_accounts, "Server酱")
+        serverchan_sendkeys = serverchan_sendkeys[: len(serverchan_uids)]
+
+        results = []
+        for i in range(len(serverchan_uids)):
+            uid = serverchan_uids[i]
+            sendkey = serverchan_sendkeys[i]
+            if uid and sendkey:
+                account_label = f"账号{i+1}" if len(serverchan_uids) > 1 else ""
+                result = send_to_serverchan(
+                    uid=uid,
+                    sendkey=sendkey,
+                    report_data=report_data,
+                    report_type=report_type,
+                    update_info=update_info,
+                    proxy_url=proxy_url,
+                    mode=mode,
+                    account_label=account_label,
+                    batch_size=self.config.get("SERVERCHAN_BATCH_SIZE", 4000),
+                    batch_interval=self.config.get("BATCH_SEND_INTERVAL", 1.0),
+                    split_content_func=self.split_content_func,
+                    get_time_func=self.get_time_func,
+                    rss_items=rss_items,
+                    rss_new_items=rss_new_items,
+                )
+                results.append(result)
+
+        return any(results) if results else False
+
     def _send_email(
         self,
         report_type: str,
@@ -531,6 +594,12 @@ class NotificationDispatcher:
         if self.config.get("SLACK_WEBHOOK_URL"):
             results["slack"] = self._send_rss_markdown(
                 rss_items, feeds_info, proxy_url, "slack"
+            )
+
+        # Server酱
+        if self.config.get("SERVERCHAN_UID") and self.config.get("SERVERCHAN_SENDKEY"):
+            results["serverchan"] = self._send_rss_markdown(
+                rss_items, feeds_info, proxy_url, "serverchan"
             )
 
         # 邮件
@@ -660,7 +729,7 @@ class NotificationDispatcher:
         proxy_url: Optional[str],
         channel: str,
     ) -> bool:
-        """发送 RSS 到 Markdown 兼容渠道（企业微信、Telegram、ntfy、Bark、Slack）"""
+        """发送 RSS 到 Markdown 兼容渠道（企业微信、Telegram、ntfy、Bark、Slack、Server酱）"""
         import requests
 
         content = render_rss_markdown_content(
@@ -680,6 +749,8 @@ class NotificationDispatcher:
                 return self._send_rss_bark(content, proxy_url)
             elif channel == "slack":
                 return self._send_rss_slack(content, proxy_url)
+            elif channel == "serverchan":
+                return self._send_rss_serverchan(content, proxy_url)
         except Exception as e:
             print(f"❌ {channel} RSS 通知发送失败: {e}")
             return False
@@ -886,6 +957,84 @@ class NotificationDispatcher:
                 results.append(True)
             except Exception as e:
                 print(f"❌ Slack{account_label} RSS 通知发送失败: {e}")
+                results.append(False)
+
+        return any(results) if results else False
+
+    def _send_rss_serverchan(self, content: str, proxy_url: Optional[str]) -> bool:
+        """发送 RSS 到 Server酱³"""
+        import requests
+
+        serverchan_uids = parse_multi_account_config(self.config["SERVERCHAN_UID"])
+        serverchan_sendkeys = parse_multi_account_config(self.config["SERVERCHAN_SENDKEY"])
+
+        if not serverchan_uids or not serverchan_sendkeys:
+            return False
+
+        # 验证配对
+        valid, count = validate_paired_configs(
+            {"uid": serverchan_uids, "sendkey": serverchan_sendkeys},
+            "Server酱",
+            required_keys=["uid", "sendkey"],
+        )
+        if not valid or count == 0:
+            return False
+
+        # 限制账号数量
+        serverchan_uids = limit_accounts(serverchan_uids, self.max_accounts, "Server酱")
+        serverchan_sendkeys = serverchan_sendkeys[: len(serverchan_uids)]
+
+        results = []
+        for i in range(len(serverchan_uids)):
+            uid = serverchan_uids[i]
+            sendkey = serverchan_sendkeys[i]
+            if not uid or not sendkey:
+                continue
+
+            account_label = f"账号{i+1}" if len(serverchan_uids) > 1 else ""
+            try:
+                batches = self.split_content_func(
+                    content, self.config.get("SERVERCHAN_BATCH_SIZE", 4000)
+                )
+
+                for batch_idx, batch_content in enumerate(batches):
+                    # 构建 Server酱³ API 端点
+                    api_endpoint = f"https://{uid}.push.ft07.com/send/{sendkey}.send"
+
+                    # 构建 payload
+                    title = f"RSS 订阅更新 {f'({batch_idx + 1}/{len(batches)})' if len(batches) > 1 else ''}"
+                    payload = {
+                        "title": title,
+                        "desp": batch_content,
+                        "tags": "TrendRadar"  # 添加 TrendRadar 标签
+                    }
+
+                    headers = {"Content-Type": "application/json;charset=utf-8"}
+                    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+                    resp = requests.post(
+                        api_endpoint,
+                        json=payload,
+                        headers=headers,
+                        proxies=proxies,
+                        timeout=30
+                    )
+
+                    # 检查响应
+                    if resp.status_code == 200:
+                        result = resp.json()
+                        if result.get("code") == 0 or result.get("errno") == 0:
+                            print(f"✅ Server酱{account_label} RSS 通知发送成功")
+                            results.append(True)
+                        else:
+                            error_msg = result.get("message") or result.get("errmsg") or result.get("info") or "未知错误"
+                            print(f"❌ Server酱{account_label} RSS 通知发送失败: {error_msg}")
+                            results.append(False)
+                    else:
+                        print(f"❌ Server酱{account_label} RSS 通知发送失败，状态码: {resp.status_code}")
+                        results.append(False)
+
+            except Exception as e:
+                print(f"❌ Server酱{account_label} RSS 通知发送失败: {e}")
                 results.append(False)
 
         return any(results) if results else False

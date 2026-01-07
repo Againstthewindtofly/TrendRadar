@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrendRadar 配置管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+            bottom: -2px;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-group .hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .notification-channels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .channel-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .channel-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .channel-card h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .platform-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .platform-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+
+        .platform-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .platform-item span {
+            flex: 1;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .channel-status {
+            margin-bottom: 10px;
+        }
+
+        .channel-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #10b981;
+            color: white;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-badge-gray {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #9ca3af;
+            color: white;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #374151;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #9ca3af;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .rss-feed-list {
+            margin-top: 20px;
+        }
+
+        .rss-feed-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .rss-feed-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f4f6;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 关键词配置规则样式 */
+        .config-rules {
+            margin-top: 40px;
+            padding: 25px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .config-rules h3 {
+            margin-bottom: 20px;
+            color: #374151;
+            font-size: 18px;
+        }
+
+        .rule-section {
+            margin-bottom: 20px;
+        }
+
+        .rule-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .rule-section h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+            font-size: 15px;
+        }
+
+        .rule-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .rule-section li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .rule-section li:last-child {
+            border-bottom: none;
+        }
+
+        .rule-section code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            border: 1px solid #e5e7eb;
+        }
+
+        .rule-section pre {
+            background: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        .rule-section pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #374151;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            header {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tab {
+                padding: 10px 16px;
+                font-size: 14px;
+                white-space: nowrap;
+            }
+
+            .tab-content {
+                padding: 20px 15px;
+            }
+
+            .notification-channels {
+                grid-template-columns: 1fr;
+            }
+
+            .platform-list {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group .btn {
+                width: 100%;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 15px;
+            }
+
+            .channel-actions {
+                flex-direction: column;
+            }
+
+            .channel-actions .btn {
+                width: 100%;
+            }
+
+            .config-rules {
+                padding: 15px;
+            }
+
+            .rule-section pre {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 18px;
+            }
+
+            header p {
+                font-size: 12px;
+            }
+
+            .tab {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            .form-group label {
+                font-size: 14px;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔥 TrendRadar 配置管理</h1>
+            <p>动态管理通知渠道、RSS订阅、新闻平台和关键词配置</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab(0)">📢 通知渠道</button>
+            <button class="tab" onclick="switchTab(1)">📰 RSS订阅</button>
+            <button class="tab" onclick="switchTab(2)">🌐 新闻平台</button>
+            <button class="tab" onclick="switchTab(3)">🔑 关键词</button>
+            <button class="tab" onclick="switchTab(4)">📊 报告配置</button>
+            <button class="tab" onclick="switchTab(5)">⏰ 推送设置</button>
+            <button class="tab" onclick="switchTab(6)">💾 存储配置</button>
+            <button class="tab" onclick="switchTab(7)">⚙️ 高级设置</button>
+        </div>
+
+        <!-- 通知渠道配置 -->
+        <div class="tab-content active">
+            <h2>通知渠道配置</h2>
+            <div class="notification-channels" id="notification-channels"></div>
+            <!-- 通知配置自动保存，无需手动保存按钮 -->
+        </div>
+
+        <!-- RSS 订阅配置 -->
+        <div class="tab-content">
+            <h2>RSS 订阅配置</h2>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="rss-enabled"> 启用 RSS 抓取
+                </label>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">📅 新鲜度过滤</h3>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="rss-freshness-enabled"> 启用新鲜度过滤
+                </label>
+                <div class="hint">过滤掉发布时间超过指定天数的旧文章</div>
+            </div>
+            <div class="form-group">
+                <label>最大文章年龄（天）</label>
+                <input type="number" id="rss-max-age-days" min="0" placeholder="3">
+                <div class="hint">只推送 N 天内的文章，设为 0 禁用过滤</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">📡 订阅源列表</h3>
+            <div id="rss-feeds-container"></div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="saveRSSConfig()">💾 保存配置</button>
+                <button class="btn btn-secondary" onclick="addRSSFeed()">➕ 添加订阅源</button>
+            </div>
+        </div>
+
+        <!-- 新闻平台配置 -->
+        <div class="tab-content">
+            <h2>新闻平台配置</h2>
+            <div class="platform-list" id="platforms-list"></div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="savePlatformsConfig()">💾 保存配置</button>
+                <button class="btn btn-secondary" onclick="addPlatform()">➕ 添加平台</button>
+            </div>
+        </div>
+
+        <!-- 关键词配置 -->
+        <div class="tab-content">
+            <h2>关键词配置</h2>
+            <div class="form-group">
+                <label>频率词列表（每行一个关键词）</label>
+                <textarea id="keywords-textarea" placeholder="AI&#10;特斯拉&#10;比亚迪&#10;..."></textarea>
+                <div class="hint">一行一个关键词，匹配到这些词的新闻会被推送</div>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="saveKeywords()">💾 保存关键词</button>
+            </div>
+
+            <!-- 关键词配置规则说明 -->
+            <div class="config-rules">
+                <h3>📖 关键词配置规则</h3>
+                <div class="rule-section">
+                    <h4>基础语法</h4>
+                    <ul>
+                        <li><strong>普通关键词</strong>：直接输入，如 <code>AI</code>、<code>特斯拉</code></li>
+                        <li><strong>必须词</strong>：使用 <code>+</code> 前缀，如 <code>+手机</code>（必须同时包含）</li>
+                        <li><strong>过滤词</strong>：使用 <code>!</code> 前缀，如 <code>!广告</code>（排除包含此词的新闻）</li>
+                        <li><strong>数量限制</strong>：使用 <code>@数字</code>，如 <code>@10</code>（限制显示10条）</li>
+                        <li><strong>正则表达式</strong>：使用 <code>/pattern/</code>，如 <code>/\bai\b/</code>（精确匹配）</li>
+                        <li><strong>显示名称</strong>：使用 <code>=> 备注</code>，如 <code>/\bai\b/ => AI相关</code></li>
+                    </ul>
+                </div>
+                <div class="rule-section">
+                    <h4>词组功能</h4>
+                    <p>使用<strong>空行</strong>分隔不同的词组，每个词组独立统计。</p>
+                    <pre><code>华为
+OPPO
++手机
+
+特斯拉
+比亚迪
+!广告</code></pre>
+                </div>
+                <div class="rule-section">
+                    <h4>全局过滤</h4>
+                    <p>使用 <code>[GLOBAL_FILTER]</code> 标记全局过滤区：</p>
+                    <pre><code>[GLOBAL_FILTER]
+广告
+推广
+
+[WORD_GROUPS]
+AI
+科技</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 报告配置 -->
+        <div class="tab-content">
+            <h2>📊 报告配置</h2>
+
+            <div class="form-group">
+                <label>报告模式</label>
+                <select id="report-mode">
+                    <option value="daily">当日汇总模式 - 推送当日所有匹配新闻</option>
+                    <option value="current">当前榜单模式 - 推送当前榜单匹配新闻</option>
+                    <option value="incremental">增量监控模式 - 仅推送新增匹配新闻</option>
+                </select>
+                <div class="hint">不同模式影响推送内容和时机</div>
+            </div>
+
+            <div class="form-group">
+                <label>显示模式</label>
+                <select id="report-display-mode">
+                    <option value="keyword">按关键词分组显示</option>
+                    <option value="platform">按平台分组显示</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>排名高亮阈值</label>
+                <input type="number" id="report-rank-threshold" min="1" placeholder="5">
+                <div class="hint">排名在此阈值内的新闻会被高亮显示</div>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="report-sort-by-position"> 按配置位置优先排序
+                </label>
+                <div class="hint">启用后按关键词在配置文件中的位置排序，否则按热点条数排序</div>
+            </div>
+
+            <div class="form-group">
+                <label>每个关键词最大显示数量</label>
+                <input type="number" id="report-max-news" min="0" placeholder="0">
+                <div class="hint">设为 0 表示不限制</div>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="report-reverse-order"> 新增热点新闻在前
+                </label>
+                <div class="hint">false=热点词汇统计在前，true=新增热点新闻在前</div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="saveReportConfig()">💾 保存配置</button>
+            </div>
+        </div>
+
+        <!-- 推送设置 -->
+        <div class="tab-content">
+            <h2>⏰ 推送时间窗口</h2>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="push-window-enabled"> 启用推送时间窗口控制
+                </label>
+                <div class="hint">限制推送的时间范围，避免非工作时间打扰</div>
+            </div>
+
+            <div class="form-group">
+                <label>开始时间</label>
+                <input type="time" id="push-window-start" placeholder="20:00">
+                <div class="hint">推送窗口开始时间（24小时制）</div>
+            </div>
+
+            <div class="form-group">
+                <label>结束时间</label>
+                <input type="time" id="push-window-end" placeholder="22:00">
+                <div class="hint">推送窗口结束时间（24小时制）</div>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="push-window-once"> 窗口内只推送一次
+                </label>
+                <div class="hint">启用后在时间窗口内只推送一次，否则每次执行都推送</div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="savePushWindowConfig()">💾 保存配置</button>
+            </div>
+        </div>
+
+        <!-- 存储配置 -->
+        <div class="tab-content">
+            <h2>💾 存储配置</h2>
+
+            <h3 style="margin-bottom: 15px;">存储后端</h3>
+            <div class="form-group">
+                <label>存储后端选择</label>
+                <select id="storage-backend">
+                    <option value="auto">自动选择</option>
+                    <option value="local">本地存储</option>
+                    <option value="remote">远程存储（S3兼容）</option>
+                </select>
+                <div class="hint">auto: 自动选择；local: 本地SQLite；remote: 云存储</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">数据格式</h3>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="storage-format-sqlite" checked disabled> SQLite数据库（必选）
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="storage-format-txt"> TXT文本格式
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="storage-format-html"> HTML报告格式
+                </label>
+                <div class="hint">⚠️ 邮件推送必须启用HTML格式</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">本地存储</h3>
+            <div class="form-group">
+                <label>数据目录</label>
+                <input type="text" id="storage-local-dir" placeholder="output">
+            </div>
+            <div class="form-group">
+                <label>数据保留天数</label>
+                <input type="number" id="storage-local-retention" min="0" placeholder="0">
+                <div class="hint">设为 0 表示永久保留</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">远程存储（S3兼容）</h3>
+            <div class="form-group">
+                <label>端点URL</label>
+                <input type="text" id="storage-remote-endpoint" placeholder="https://xxx.r2.cloudflarestorage.com">
+                <div class="hint">支持 Cloudflare R2、阿里云OSS、腾讯云COS等</div>
+            </div>
+            <div class="form-group">
+                <label>存储桶名称</label>
+                <input type="text" id="storage-remote-bucket" placeholder="my-bucket">
+            </div>
+            <div class="form-group">
+                <label>访问密钥ID</label>
+                <input type="text" id="storage-remote-access-key" placeholder="Access Key ID">
+            </div>
+            <div class="form-group">
+                <label>访问密钥</label>
+                <input type="password" id="storage-remote-secret-key" placeholder="Secret Access Key">
+            </div>
+            <div class="form-group">
+                <label>区域</label>
+                <input type="text" id="storage-remote-region" placeholder="auto（可选）">
+            </div>
+            <div class="form-group">
+                <label>数据保留天数</label>
+                <input type="number" id="storage-remote-retention" min="0" placeholder="0">
+                <div class="hint">设为 0 表示永久保留</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">数据拉取</h3>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="storage-pull-enabled"> 启用启动时自动拉取
+                </label>
+                <div class="hint">从远程同步数据到本地（用于MCP Server等场景）</div>
+            </div>
+            <div class="form-group">
+                <label>拉取最近天数</label>
+                <input type="number" id="storage-pull-days" min="1" placeholder="7">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="saveStorageConfig()">💾 保存配置</button>
+            </div>
+        </div>
+
+        <!-- 高级设置 -->
+        <div class="tab-content">
+            <h2>⚙️ 高级设置</h2>
+
+            <h3 style="margin-bottom: 15px;">应用设置</h3>
+            <div class="form-group">
+                <label>时区</label>
+                <input type="text" id="app-timezone" placeholder="Asia/Shanghai">
+                <div class="hint">影响所有时间显示、推送窗口判断、数据存储</div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="app-show-version-update"> 显示版本更新提示
+                </label>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">爬虫设置</h3>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="crawler-enabled"> 启用爬虫功能
+                </label>
+            </div>
+            <div class="form-group">
+                <label>请求间隔（毫秒）</label>
+                <input type="number" id="crawler-interval" min="0" placeholder="1000">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="crawler-use-proxy"> 使用代理
+                </label>
+            </div>
+            <div class="form-group">
+                <label>默认代理地址</label>
+                <input type="text" id="crawler-proxy" placeholder="http://127.0.0.1:10801">
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">RSS高级设置</h3>
+            <div class="form-group">
+                <label>请求间隔（毫秒）</label>
+                <input type="number" id="rss-adv-interval" min="0" placeholder="2000">
+            </div>
+            <div class="form-group">
+                <label>请求超时（秒）</label>
+                <input type="number" id="rss-adv-timeout" min="1" placeholder="15">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="rss-adv-use-proxy"> 使用代理
+                </label>
+            </div>
+            <div class="form-group">
+                <label>RSS专属代理</label>
+                <input type="text" id="rss-adv-proxy" placeholder="留空则使用爬虫代理">
+                <div class="hint">留空则使用 crawler.default_proxy</div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="rss-adv-notification"> 启用RSS通知推送
+                </label>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">排序权重</h3>
+            <div class="form-group">
+                <label>排名权重（0-1）</label>
+                <input type="number" id="weight-rank" min="0" max="1" step="0.1" placeholder="0.6">
+            </div>
+            <div class="form-group">
+                <label>频次权重（0-1）</label>
+                <input type="number" id="weight-frequency" min="0" max="1" step="0.1" placeholder="0.3">
+            </div>
+            <div class="form-group">
+                <label>热度权重（0-1）</label>
+                <input type="number" id="weight-hotness" min="0" max="1" step="0.1" placeholder="0.1">
+            </div>
+            <div class="hint" style="margin-bottom: 20px;">三个权重相加应等于 1.0</div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">其他设置</h3>
+            <div class="form-group">
+                <label>每个渠道最大账号数</label>
+                <input type="number" id="max-accounts" min="1" placeholder="3">
+            </div>
+            <div class="form-group">
+                <label>批次发送间隔（秒）</label>
+                <input type="number" id="batch-interval" min="0" step="0.1" placeholder="3">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="saveAdvancedConfig()">💾 保存配置</button>
+                <button class="btn btn-success" onclick="restartContainer()">🔄 重启容器</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentConfig = {};
+
+        // 切换标签页
+        function switchTab(index) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                    contents[i].classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                    contents[i].classList.remove('active');
+                }
+            });
+        }
+
+        // 显示提示消息
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // 加载完整配置
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const result = await response.json();
+                if (result.success) {
+                    currentConfig = result.data;
+                    renderNotificationChannels();
+                    renderRSSConfig();
+                    renderPlatforms();
+                    loadKeywords();
+                    loadReportConfig();
+                    loadPushWindowConfig();
+                    loadStorageConfig();
+                    loadAdvancedConfig();
+                }
+            } catch (error) {
+                showToast('配置加载失败: ' + error.message, 'error');
+            }
+        }
+
+        // 渲染通知渠道
+        function renderNotificationChannels() {
+            const container = document.getElementById('notification-channels');
+            const notification = currentConfig.notification || {};
+            const channels = notification.channels || {};
+
+            const channelConfigs = [
+                { key: 'feishu', name: '飞书', fields: ['webhook_url'], required: ['webhook_url'] },
+                { key: 'dingtalk', name: '钉钉', fields: ['webhook_url'], required: ['webhook_url'] },
+                { key: 'wework', name: '企业微信', fields: ['webhook_url', 'msg_type'], required: ['webhook_url'] },
+                { key: 'telegram', name: 'Telegram', fields: ['bot_token', 'chat_id'], required: ['bot_token', 'chat_id'] },
+                { key: 'serverchan', name: 'Server酱³', fields: ['uid', 'sendkey'], required: ['uid', 'sendkey'] },
+                { key: 'bark', name: 'Bark', fields: ['url'], required: ['url'] },
+                { key: 'slack', name: 'Slack', fields: ['webhook_url'], required: ['webhook_url'] },
+                { key: 'ntfy', name: 'ntfy', fields: ['server_url', 'topic', 'token'], required: ['topic'] },
+                { key: 'email', name: '邮件', fields: ['from', 'password', 'to', 'smtp_server', 'smtp_port'], required: ['from', 'password', 'to', 'smtp_server'] }
+            ];
+
+            container.innerHTML = channelConfigs.map(config => {
+                const channelData = channels[config.key] || {};
+
+                // 检查是否已配置（必需字段有值）
+                const isConfigured = config.required.some(field => channelData[field]);
+
+                // 计算账号数量（解析分号分隔的多账号）
+                let accountCount = 0;
+                if (isConfigured && config.required.length > 0) {
+                    const firstRequiredField = config.required[0];
+                    const value = channelData[firstRequiredField];
+                    if (value) {
+                        accountCount = value.split(';').filter(v => v.trim()).length;
+                    }
+                }
+
+                return `
+                    <div class="channel-card">
+                        <h3>${config.name}</h3>
+                        <div class="channel-status">
+                            ${isConfigured ?
+                                `<span class="status-badge">✓ 已配置 (${accountCount}个账号)</span>` :
+                                `<span class="status-badge-gray">未配置</span>`
+                            }
+                        </div>
+                        <div class="channel-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="showAddChannelForm('${config.key}', '${config.name}', ${JSON.stringify(config.fields).replace(/"/g, '&quot;')})">➕ 添加账号</button>
+                            ${isConfigured ?
+                                `<button class="btn btn-danger btn-sm" onclick="deleteChannel('${config.key}')">🗑️ 删除所有</button>` :
+                                ''
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 显示添加渠道表单
+        function showAddChannelForm(channelKey, channelName, fields) {
+            const fieldsArray = typeof fields === 'string' ? JSON.parse(fields) : fields;
+
+            const fieldsHTML = fieldsArray.map(field => {
+                const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                const inputType = field.includes('password') || field.includes('key') || field.includes('token') ? 'password' : 'text';
+
+                let placeholder = `请输入${fieldName}`;
+                let defaultValue = '';
+                let hint = '';
+
+                if (field === 'msg_type') {
+                    placeholder = 'markdown';
+                    defaultValue = 'markdown';
+                    hint = '可选: markdown 或 text，默认 markdown';
+                } else if (field === 'server_url') {
+                    placeholder = 'https://ntfy.sh';
+                    defaultValue = 'https://ntfy.sh';
+                    hint = '默认: https://ntfy.sh';
+                } else if (field === 'token') {
+                    hint = '可选，用于私有主题认证';
+                } else if (field === 'smtp_port') {
+                    placeholder = '465 或 587';
+                    hint = 'SSL: 465, TLS: 587';
+                }
+
+                return `
+                    <div class="form-group">
+                        <label>${fieldName}</label>
+                        <input type="${inputType}"
+                               id="add-${channelKey}-${field}"
+                               placeholder="${placeholder}"
+                               value="${defaultValue}">
+                        ${hint ? `<div class="hint">${hint}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>添加 ${channelName} 配置</h3>
+                        <button class="modal-close" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        ${fieldsHTML}
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button class="btn btn-primary" onclick="addChannel('${channelKey}', ${JSON.stringify(fieldsArray).replace(/"/g, '&quot;')})">确认添加</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // 添加渠道配置
+        function addChannel(channelKey, fields) {
+            const fieldsArray = typeof fields === 'string' ? JSON.parse(fields) : fields;
+            const channelData = {};
+
+            fieldsArray.forEach(field => {
+                const input = document.getElementById(`add-${channelKey}-${field}`);
+                if (input && input.value) {
+                    channelData[field] = input.value;
+                }
+            });
+
+            // 更新配置（支持多账号追加）
+            if (!currentConfig.notification.channels[channelKey]) {
+                currentConfig.notification.channels[channelKey] = {};
+            }
+
+            // 追加多账号（使用分号分隔）
+            Object.keys(channelData).forEach(field => {
+                const newValue = channelData[field];
+                const existingValue = currentConfig.notification.channels[channelKey][field];
+
+                if (existingValue && existingValue.trim()) {
+                    // 已有值，追加新值（用分号分隔）
+                    currentConfig.notification.channels[channelKey][field] = existingValue + ';' + newValue;
+                } else {
+                    // 没有值，直接设置
+                    currentConfig.notification.channels[channelKey][field] = newValue;
+                }
+            });
+
+            closeModal();
+            saveNotificationConfig();
+        }
+
+        // 删除渠道配置
+        function deleteChannel(channelKey) {
+            if (confirm('确定要删除此渠道的配置吗？')) {
+                // 清空该渠道的所有配置
+                if (currentConfig.notification.channels[channelKey]) {
+                    Object.keys(currentConfig.notification.channels[channelKey]).forEach(key => {
+                        currentConfig.notification.channels[channelKey][key] = '';
+                    });
+                }
+                saveNotificationConfig();
+            }
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            const modal = document.querySelector('.modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // 保存通知配置
+        async function saveNotificationConfig() {
+            try {
+                const response = await fetch('/api/config/notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentConfig.notification)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('通知配置保存成功');
+                    loadConfig(); // 重新加载配置以更新界面
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 渲染 RSS 配置
+        function renderRSSConfig() {
+            const rss = currentConfig.rss || {};
+            document.getElementById('rss-enabled').checked = rss.enabled || false;
+
+            // 新鲜度过滤配置
+            const freshness = rss.freshness_filter || {};
+            document.getElementById('rss-freshness-enabled').checked = freshness.enabled !== false;
+            document.getElementById('rss-max-age-days').value = freshness.max_age_days || 3;
+
+            const container = document.getElementById('rss-feeds-container');
+            const feeds = rss.feeds || [];
+
+            container.innerHTML = '<div class="rss-feed-list">' + feeds.map((feed, index) => `
+                <div class="rss-feed-item">
+                    <div class="form-group">
+                        <label>名称</label>
+                        <input type="text" value="${feed.name || ''}" data-feed-index="${index}" data-field="name">
+                    </div>
+                    <div class="form-group">
+                        <label>URL</label>
+                        <input type="text" value="${feed.url || ''}" data-feed-index="${index}" data-field="url">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" ${feed.enabled !== false ? 'checked' : ''} data-feed-index="${index}" data-field="enabled">
+                            启用此订阅源
+                        </label>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="deleteRSSFeed(${index})">🗑️ 删除</button>
+                </div>
+            `).join('') + '</div>';
+        }
+
+        // 添加 RSS 订阅源
+        function addRSSFeed() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>添加 RSS 订阅源</h3>
+                        <button class="modal-close" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>名称</label>
+                            <input type="text" id="new-rss-name" placeholder="例如: Hacker News">
+                        </div>
+                        <div class="form-group">
+                            <label>URL</label>
+                            <input type="text" id="new-rss-url" placeholder="例如: https://hnrss.org/frontpage">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="new-rss-enabled" checked>
+                                启用此订阅源
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button class="btn btn-primary" onclick="confirmAddRSSFeed()">确认添加</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // 确认添加 RSS 订阅源
+        function confirmAddRSSFeed() {
+            const name = document.getElementById('new-rss-name').value;
+            const url = document.getElementById('new-rss-url').value;
+            const enabled = document.getElementById('new-rss-enabled').checked;
+
+            if (!name || !url) {
+                showToast('请填写名称和URL', 'error');
+                return;
+            }
+
+            if (!currentConfig.rss.feeds) {
+                currentConfig.rss.feeds = [];
+            }
+
+            currentConfig.rss.feeds.push({
+                id: name.toLowerCase().replace(/\s+/g, '-'),
+                name: name,
+                url: url,
+                enabled: enabled
+            });
+
+            closeModal();
+            saveRSSConfig();
+        }
+
+        // 删除 RSS 订阅源
+        function deleteRSSFeed(index) {
+            if (confirm('确定要删除此RSS订阅源吗？')) {
+                currentConfig.rss.feeds.splice(index, 1);
+                saveRSSConfig();
+            }
+        }
+
+        // 保存 RSS 配置
+        async function saveRSSConfig() {
+            const enabled = document.getElementById('rss-enabled').checked;
+            const freshnessEnabled = document.getElementById('rss-freshness-enabled').checked;
+            const maxAgeDays = parseInt(document.getElementById('rss-max-age-days').value) || 3;
+
+            const feedInputs = document.querySelectorAll('.rss-feed-item input');
+            const feeds = [];
+
+            const feedsMap = {};
+            feedInputs.forEach(input => {
+                const index = input.dataset.feedIndex;
+                const field = input.dataset.field;
+
+                if (!feedsMap[index]) {
+                    feedsMap[index] = {};
+                }
+
+                if (input.type === 'checkbox') {
+                    feedsMap[index][field] = input.checked;
+                } else {
+                    feedsMap[index][field] = input.value;
+                }
+            });
+
+            Object.values(feedsMap).forEach(feed => feeds.push(feed));
+
+            try {
+                const response = await fetch('/api/config/rss', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...currentConfig.rss,
+                        enabled: enabled,
+                        freshness_filter: {
+                            enabled: freshnessEnabled,
+                            max_age_days: maxAgeDays
+                        },
+                        feeds: feeds
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('RSS 配置保存成功');
+                    loadConfig();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 渲染新闻平台
+        function renderPlatforms() {
+            const container = document.getElementById('platforms-list');
+            const platforms = currentConfig.platforms || [];
+
+            container.innerHTML = platforms.map((platform, index) => `
+                <div class="platform-item">
+                    <span>${platform.name}</span>
+                    <button class="btn btn-danger btn-sm" onclick="deletePlatform(${index})">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        // 添加新闻平台
+        function addPlatform() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>添加新闻平台</h3>
+                        <button class="modal-close" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>平台ID</label>
+                            <input type="text" id="new-platform-id" placeholder="例如: weibo">
+                            <div class="hint">平台的唯一标识符，使用小写英文</div>
+                        </div>
+                        <div class="form-group">
+                            <label>平台名称</label>
+                            <input type="text" id="new-platform-name" placeholder="例如: 微博">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button class="btn btn-primary" onclick="confirmAddPlatform()">确认添加</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // 确认添加新闻平台
+        function confirmAddPlatform() {
+            const id = document.getElementById('new-platform-id').value;
+            const name = document.getElementById('new-platform-name').value;
+
+            if (!id || !name) {
+                showToast('请填写平台ID和名称', 'error');
+                return;
+            }
+
+            if (!currentConfig.platforms) {
+                currentConfig.platforms = [];
+            }
+
+            // 检查ID是否重复
+            if (currentConfig.platforms.some(p => p.id === id)) {
+                showToast('平台ID已存在', 'error');
+                return;
+            }
+
+            currentConfig.platforms.push({
+                id: id,
+                name: name
+            });
+
+            closeModal();
+            savePlatformsConfig();
+        }
+
+        // 删除新闻平台
+        function deletePlatform(index) {
+            if (confirm('确定要删除此新闻平台吗？')) {
+                currentConfig.platforms.splice(index, 1);
+                savePlatformsConfig();
+            }
+        }
+
+        // 保存平台配置
+        async function savePlatformsConfig() {
+            try {
+                const response = await fetch('/api/config/platforms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentConfig.platforms)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('平台配置保存成功');
+                    loadConfig(); // 重新加载配置以更新界面
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 加载关键词
+        async function loadKeywords() {
+            try {
+                const response = await fetch('/api/keywords');
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('keywords-textarea').value = result.data;
+                }
+            } catch (error) {
+                showToast('关键词加载失败: ' + error.message, 'error');
+            }
+        }
+
+        // 保存关键词
+        async function saveKeywords() {
+            const content = document.getElementById('keywords-textarea').value;
+
+            try {
+                const response = await fetch('/api/keywords', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('关键词保存成功');
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 加载报告配置
+        function loadReportConfig() {
+            const report = currentConfig.report || {};
+            document.getElementById('report-mode').value = report.mode || 'current';
+            document.getElementById('report-display-mode').value = report.display_mode || 'keyword';
+            document.getElementById('report-rank-threshold').value = report.rank_threshold || 5;
+            document.getElementById('report-sort-by-position').checked = report.sort_by_position_first || false;
+            document.getElementById('report-max-news').value = report.max_news_per_keyword || 0;
+            document.getElementById('report-reverse-order').checked = report.reverse_content_order || false;
+        }
+
+        // 保存报告配置
+        async function saveReportConfig() {
+            try {
+                const response = await fetch('/api/config/report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mode: document.getElementById('report-mode').value,
+                        display_mode: document.getElementById('report-display-mode').value,
+                        rank_threshold: parseInt(document.getElementById('report-rank-threshold').value) || 5,
+                        sort_by_position_first: document.getElementById('report-sort-by-position').checked,
+                        max_news_per_keyword: parseInt(document.getElementById('report-max-news').value) || 0,
+                        reverse_content_order: document.getElementById('report-reverse-order').checked
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('报告配置保存成功');
+                    loadConfig();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 加载推送窗口配置
+        function loadPushWindowConfig() {
+            const notification = currentConfig.notification || {};
+            const pushWindow = notification.push_window || {};
+            document.getElementById('push-window-enabled').checked = pushWindow.enabled || false;
+            document.getElementById('push-window-start').value = pushWindow.start || '20:00';
+            document.getElementById('push-window-end').value = pushWindow.end || '22:00';
+            document.getElementById('push-window-once').checked = pushWindow.once_per_day !== false;
+        }
+
+        // 保存推送窗口配置
+        async function savePushWindowConfig() {
+            try {
+                const response = await fetch('/api/config/push-window', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        enabled: document.getElementById('push-window-enabled').checked,
+                        start: document.getElementById('push-window-start').value,
+                        end: document.getElementById('push-window-end').value,
+                        once_per_day: document.getElementById('push-window-once').checked
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('推送窗口配置保存成功');
+                    loadConfig();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 加载存储配置
+        function loadStorageConfig() {
+            const storage = currentConfig.storage || {};
+            const formats = storage.formats || {};
+            const local = storage.local || {};
+            const remote = storage.remote || {};
+            const pull = storage.pull || {};
+
+            document.getElementById('storage-backend').value = storage.backend || 'auto';
+            document.getElementById('storage-format-txt').checked = formats.txt || false;
+            document.getElementById('storage-format-html').checked = formats.html || false;
+            document.getElementById('storage-local-dir').value = local.data_dir || 'output';
+            document.getElementById('storage-local-retention').value = local.retention_days || 0;
+            document.getElementById('storage-remote-endpoint').value = remote.endpoint_url || '';
+            document.getElementById('storage-remote-bucket').value = remote.bucket_name || '';
+            document.getElementById('storage-remote-access-key').value = remote.access_key_id || '';
+            document.getElementById('storage-remote-secret-key').value = remote.secret_access_key || '';
+            document.getElementById('storage-remote-region').value = remote.region || '';
+            document.getElementById('storage-remote-retention').value = remote.retention_days || 0;
+            document.getElementById('storage-pull-enabled').checked = pull.enabled || false;
+            document.getElementById('storage-pull-days').value = pull.days || 7;
+        }
+
+        // 保存存储配置
+        async function saveStorageConfig() {
+            try {
+                const response = await fetch('/api/config/storage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        backend: document.getElementById('storage-backend').value,
+                        formats: {
+                            sqlite: true,
+                            txt: document.getElementById('storage-format-txt').checked,
+                            html: document.getElementById('storage-format-html').checked
+                        },
+                        local: {
+                            data_dir: document.getElementById('storage-local-dir').value,
+                            retention_days: parseInt(document.getElementById('storage-local-retention').value) || 0
+                        },
+                        remote: {
+                            endpoint_url: document.getElementById('storage-remote-endpoint').value,
+                            bucket_name: document.getElementById('storage-remote-bucket').value,
+                            access_key_id: document.getElementById('storage-remote-access-key').value,
+                            secret_access_key: document.getElementById('storage-remote-secret-key').value,
+                            region: document.getElementById('storage-remote-region').value,
+                            retention_days: parseInt(document.getElementById('storage-remote-retention').value) || 0
+                        },
+                        pull: {
+                            enabled: document.getElementById('storage-pull-enabled').checked,
+                            days: parseInt(document.getElementById('storage-pull-days').value) || 7
+                        }
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('存储配置保存成功');
+                    loadConfig();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 加载高级配置
+        function loadAdvancedConfig() {
+            const app = currentConfig.app || {};
+            const advanced = currentConfig.advanced || {};
+            const crawler = advanced.crawler || {};
+            const rss = advanced.rss || {};
+            const weight = advanced.weight || {};
+
+            document.getElementById('app-timezone').value = app.timezone || 'Asia/Shanghai';
+            document.getElementById('app-show-version-update').checked = app.show_version_update !== false;
+
+            document.getElementById('crawler-enabled').checked = crawler.enabled !== false;
+            document.getElementById('crawler-interval').value = crawler.request_interval || 1000;
+            document.getElementById('crawler-use-proxy').checked = crawler.use_proxy || false;
+            document.getElementById('crawler-proxy').value = crawler.default_proxy || '';
+
+            document.getElementById('rss-adv-interval').value = rss.request_interval || 2000;
+            document.getElementById('rss-adv-timeout').value = rss.timeout || 15;
+            document.getElementById('rss-adv-use-proxy').checked = rss.use_proxy || false;
+            document.getElementById('rss-adv-proxy').value = rss.proxy_url || '';
+            document.getElementById('rss-adv-notification').checked = rss.notification_enabled !== false;
+
+            document.getElementById('weight-rank').value = weight.rank || 0.6;
+            document.getElementById('weight-frequency').value = weight.frequency || 0.3;
+            document.getElementById('weight-hotness').value = weight.hotness || 0.1;
+
+            document.getElementById('max-accounts').value = advanced.max_accounts_per_channel || 3;
+            document.getElementById('batch-interval').value = advanced.batch_send_interval || 3;
+        }
+
+        // 保存高级配置
+        async function saveAdvancedConfig() {
+            try {
+                // 保存应用配置
+                await fetch('/api/config/app', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        timezone: document.getElementById('app-timezone').value,
+                        show_version_update: document.getElementById('app-show-version-update').checked
+                    })
+                });
+
+                // 保存高级配置
+                const response = await fetch('/api/config/advanced', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...currentConfig.advanced,
+                        crawler: {
+                            enabled: document.getElementById('crawler-enabled').checked,
+                            request_interval: parseInt(document.getElementById('crawler-interval').value) || 1000,
+                            use_proxy: document.getElementById('crawler-use-proxy').checked,
+                            default_proxy: document.getElementById('crawler-proxy').value
+                        },
+                        rss: {
+                            request_interval: parseInt(document.getElementById('rss-adv-interval').value) || 2000,
+                            timeout: parseInt(document.getElementById('rss-adv-timeout').value) || 15,
+                            use_proxy: document.getElementById('rss-adv-use-proxy').checked,
+                            proxy_url: document.getElementById('rss-adv-proxy').value,
+                            notification_enabled: document.getElementById('rss-adv-notification').checked
+                        },
+                        weight: {
+                            rank: parseFloat(document.getElementById('weight-rank').value) || 0.6,
+                            frequency: parseFloat(document.getElementById('weight-frequency').value) || 0.3,
+                            hotness: parseFloat(document.getElementById('weight-hotness').value) || 0.1
+                        },
+                        max_accounts_per_channel: parseInt(document.getElementById('max-accounts').value) || 3,
+                        batch_send_interval: parseFloat(document.getElementById('batch-interval').value) || 3
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('高级配置保存成功');
+                    loadConfig();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 重启容器
+        async function restartContainer() {
+            if (!confirm('确定要重启 TrendRadar 容器吗？')) return;
+
+            try {
+                const response = await fetch('/api/restart', { method: 'POST' });
+                const result = await response.json();
+                showToast(result.message, result.success ? 'success' : 'error');
+            } catch (error) {
+                showToast('重启失败: ' + error.message, 'error');
+            }
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('DOMContentLoaded', loadConfig);
+    </script>
+</body>
+</html>

@@ -1,11 +1,11 @@
 services:
   trendradar:
-    image: wantcat/trendradar:latest
+    image: mcode0001/trendradar:latest
     container_name: trendradar
     restart: unless-stopped
 
     ports:
-      - "127.0.0.1:${WEBSERVER_PORT:-8080}:${WEBSERVER_PORT:-8080}"
+      - "127.0.0.1:${WEBSERVER_PORT:-8082}:${WEBSERVER_PORT:-8080}"
 
     volumes:
       - ../config:/app/config:ro
@@ -40,6 +40,9 @@ services:
       - NTFY_TOKEN=${NTFY_TOKEN:-}
       # Bark配置
       - BARK_URL=${BARK_URL:-}
+      # Server酱配置
+      - SERVERCHAN_UID=${SERVERCHAN_UID:-}
+      - SERVERCHAN_SENDKEY=${SERVERCHAN_SENDKEY:-}
       # Slack配置
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
       # 远程存储配置（S3 兼容协议）
@@ -54,7 +57,7 @@ services:
       - IMMEDIATE_RUN=${IMMEDIATE_RUN:-true}
 
   trendradar-mcp:
-    image: wantcat/trendradar-mcp:latest
+    image: mcode0001/trendradar-mcp:latest
     container_name: trendradar-mcp
     restart: unless-stopped
 
@@ -67,3 +70,38 @@ services:
 
     environment:
       - TZ=Asia/Shanghai
+
+  trendradar-webui:
+    image: mcode0001/trendradar-webui:latest
+    container_name: trendradar-webui
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:${WEBUI_PORT:-5000}:5000"
+
+    volumes:
+      - ../config:/app/config
+      - ../output:/app/output:ro
+
+    environment:
+      - TZ=Asia/Shanghai
+      - WEBUI_PORT=${WEBUI_PORT:-5000}
+      # 通知渠道环境变量
+      - FEISHU_WEBHOOK_URL=${FEISHU_WEBHOOK_URL:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - DINGTALK_WEBHOOK_URL=${DINGTALK_WEBHOOK_URL:-}
+      - WEWORK_WEBHOOK_URL=${WEWORK_WEBHOOK_URL:-}
+      - WEWORK_MSG_TYPE=${WEWORK_MSG_TYPE:-}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+      - EMAIL_TO=${EMAIL_TO:-}
+      - EMAIL_SMTP_SERVER=${EMAIL_SMTP_SERVER:-}
+      - EMAIL_SMTP_PORT=${EMAIL_SMTP_PORT:-}
+      - NTFY_SERVER_URL=${NTFY_SERVER_URL:-https://ntfy.sh}
+      - NTFY_TOPIC=${NTFY_TOPIC:-}
+      - NTFY_TOKEN=${NTFY_TOKEN:-}
+      - BARK_URL=${BARK_URL:-}
+      - SERVERCHAN_UID=${SERVERCHAN_UID:-}
+      - SERVERCHAN_SENDKEY=${SERVERCHAN_SENDKEY:-}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}

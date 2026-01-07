@@ -102,8 +102,8 @@ def format_title_for_platform(
 
         return result
 
-    elif platform in ("wework", "bark"):
-        # WeWork 和 Bark 使用 markdown 格式
+    elif platform in ("wework", "bark", "serverchan"):
+        # WeWork, Bark 和 Server酱 使用 markdown 格式
         if link_url:
             formatted_title = f"[{cleaned_title}]({link_url})"
         else:
